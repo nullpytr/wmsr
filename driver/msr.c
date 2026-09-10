@@ -62,6 +62,29 @@ VOID MsrDpcWriteRoutine(
     KeSetEvent(&context->done, IO_NO_INCREMENT, FALSE);
 }
 
+VOID MsrDpcMakeContext(
+    PMSR_DPC_CONTEXT context, 
+    PMSR_REQUEST request
+) {
+    context->request = *request;
+    context->status = STATUS_UNSUCCESSFUL;
+}
+
+VOID MsrDpcExecuteRoutineOnProc(
+    PMSR_DPC_CONTEXT context, 
+    PKDEFERRED_ROUTINE routine, 
+    PROCESSOR_NUMBER *proc_number
+) {
+    KeInitializeEvent(&context->done, NotificationEvent, FALSE);
+
+    KDPC dpc;
+    KeInitializeDpc(&dpc, routine, context);
+    KeSetTargetProcessorDpcEx(&dpc, proc_number);
+
+    KeInsertQueueDpc(&dpc, NULL, NULL);
+    KeWaitForSingleObject(&context->done, Executive, KernelMode, FALSE, NULL);
+}
+
 NTSTATUS MsrStatusTerminate(
     PIRP     Irp,
     NTSTATUS status,
@@ -116,5 +139,25 @@ NTSTATUS MsrHandlerDeviceControl(
     if (!NT_SUCCESS(proc_status)) 
         return MsrStatusTerminate(Irp, proc_status, 0);
 
-    // TODO
+    MSR_DPC_CONTEXT context;
+    MsrDpcMakeContext(&context, request);
+
+    if (control_code == IOCTL_WRITE_MSR) { // writes are simple
+        MsrDpcExecuteRoutineOnProc(&context, MsrDpcWriteRoutine, &proc_number);
+        return MsrStatusTerminate(Irp, context.status, 0);
+    }
+
+    // reads are a little more work
+
+    if (stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MSR_REQUEST)) 
+        return MsrStatusTerminate(Irp, STATUS_BUFFER_TOO_SMALL, 0);
+
+    MsrDpcExecuteRoutineOnProc(&context, MsrDpcReadRoutine, &proc_number);
+
+    if (!NT_SUCCESS(context.status)) 
+        return MsrStatusTerminate(Irp, context.status, 0);
+
+    request->val = context.request.val;
+
+    return MsrStatusTerminate(Irp, context.status, sizeof(MSR_REQUEST));
 }
