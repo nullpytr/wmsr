@@ -1,14 +1,10 @@
 #ifndef WMSR_H
 #define WMSR_H
 
-#ifndef CTL_CODE // no ntddk.h or windows.h
-
-#define METHOD_BUFFERED 0
-#define FILE_READ_ACCESS 0x0001
-#define FILE_WRITE_ACCESS 0x0002
-#define CTL_CODE(DeviceType, Function, Method, Access) \
-    (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
-    
+#ifdef __cplusplus
+#include <windows.h> // user space
+#else
+#include <ntddk.h> // kernel space
 #endif
 
 #define MSR_DEVICE_TYPE 40000
@@ -102,7 +98,7 @@ public:
             .cpu = cpu, 
             .val = {} 
         };
-        
+
         if (ioctl(IOCTL_READ_MSR, request)) 
             return request.val.q;
         
