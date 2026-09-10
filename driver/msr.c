@@ -187,8 +187,6 @@ NTSTATUS DriverEntry(
 
     UNICODE_STRING device_name = RTL_CONSTANT_STRING(MSR_NT_DEVICE_NAME);
 
-    UNICODE_STRING sddl = RTL_CONSTANT_STRING(L"D:P(A;;GA;;;SY)(A;;GA;;;BA)");
-
     PDEVICE_OBJECT device_object;
     NTSTATUS device_status = WdmlibIoCreateDeviceSecure(
         DriverObject,
@@ -197,7 +195,7 @@ NTSTATUS DriverEntry(
         FILE_DEVICE_UNKNOWN,
         FILE_DEVICE_SECURE_OPEN,
         FALSE,
-        &sddl,
+        &SDDL_DEVOBJ_SYS_ALL_ADM_ALL,
         &MSR_CLASS_GUID,
         &device_object
     );
