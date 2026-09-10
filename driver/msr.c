@@ -61,3 +61,18 @@ VOID MsrWriteDpc(
 
     KeSetEvent(&ctx->done, IO_NO_INCREMENT, FALSE);
 }
+
+NTSTATUS MsrCreateClose(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP           Irp
+) {
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = NULL;
+    
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
