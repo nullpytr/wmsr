@@ -121,13 +121,13 @@ NTSTATUS MsrHandlerDeviceControl(
 
     PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MSR_REQUEST))
-        return MsrStatusTerminate(Irp, STATUS_BUFFER_TOO_SMALL, 0);
-
     ULONG control_code = stack->Parameters.DeviceIoControl.IoControlCode;
 
     if (control_code != IOCTL_READ_MSR && control_code != IOCTL_WRITE_MSR)
         return MsrStatusTerminate(Irp, STATUS_INVALID_DEVICE_REQUEST, 0);
+
+    if (stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MSR_REQUEST))
+        return MsrStatusTerminate(Irp, STATUS_BUFFER_TOO_SMALL, 0);
 
     PMSR_REQUEST request = (PMSR_REQUEST)Irp->AssociatedIrp.SystemBuffer;
 
