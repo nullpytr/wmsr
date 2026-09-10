@@ -4,7 +4,7 @@
 #include "wmsr.h"
 
 DRIVER_INITIALIZE DriverEntry;
-DRIVER_UNLOAD     MsrHandlerUnload;
+DRIVER_UNLOAD     DriverExit;
 DRIVER_DISPATCH   MsrHandlerCreateClose;
 DRIVER_DISPATCH   MsrHandlerDeviceControl;
 KDEFERRED_ROUTINE MsrDpcReadRoutine;
@@ -160,4 +160,13 @@ NTSTATUS MsrHandlerDeviceControl(
     request->val = context.request.val;
 
     return MsrStatusTerminate(Irp, context.status, sizeof(MSR_REQUEST));
+}
+
+VOID DriverExit(
+    PDRIVER_OBJECT DriverObject
+) {
+    UNICODE_STRING dos_name;
+    RtlInitUnicodeString(&dos_name, MSR_DOS_DEVICE_NAME);
+    IoDeleteSymbolicLink(&dos_name);
+    IoDeleteDevice(DriverObject->DeviceObject);
 }
