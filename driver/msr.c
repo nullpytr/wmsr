@@ -85,6 +85,12 @@ VOID MsrDpcExecuteRoutineOnProc(
     KeWaitForSingleObject(&context->done, Executive, KernelMode, FALSE, NULL);
 }
 
+BOOLEAN MsrIsValidCpu(
+    MSR_CPU cpu
+) { 
+    return cpu < KeQueryActiveProcessorCountEx(ALL_PROCESSOR_GROUPS); 
+}
+
 NTSTATUS MsrStatusTerminate(
     PIRP     Irp,
     NTSTATUS status,
@@ -103,12 +109,6 @@ NTSTATUS MsrHandlerCreateClose(
     PAGED_CODE();
     UNREFERENCED_PARAMETER(DeviceObject);
     return MsrStatusTerminate(Irp, STATUS_SUCCESS, 0);
-}
-
-BOOLEAN MsrCheckIsValidCpu(
-    MSR_CPU cpu
-) { 
-    return cpu < KeQueryActiveProcessorCountEx(ALL_PROCESSOR_GROUPS); 
 }
 
 NTSTATUS MsrHandlerDeviceControl(
@@ -131,7 +131,7 @@ NTSTATUS MsrHandlerDeviceControl(
 
     PMSR_REQUEST request = (PMSR_REQUEST)Irp->AssociatedIrp.SystemBuffer;
 
-    if (!MsrCheckIsValidCpu(request->cpu)) 
+    if (!MsrIsValidCpu(request->cpu)) 
         return MsrStatusTerminate(Irp, STATUS_INVALID_PARAMETER, 0);
 
     PROCESSOR_NUMBER proc_number;
