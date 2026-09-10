@@ -81,7 +81,9 @@ VOID MsrDpcExecuteRoutineOnProc(
     KeInitializeDpc(&dpc, routine, context);
     KeSetTargetProcessorDpcEx(&dpc, proc_number);
 
-    KeInsertQueueDpc(&dpc, NULL, NULL);
+    BOOLEAN queued = KeInsertQueueDpc(&dpc, NULL, NULL);
+    NT_ASSERT(queued);
+    
     KeWaitForSingleObject(&context->done, Executive, KernelMode, FALSE, NULL);
 }
 
