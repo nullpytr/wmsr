@@ -40,4 +40,113 @@ typedef struct _MSR_REQUEST {
     MSR_VALUE val;
 } MSR_REQUEST, *PMSR_REQUEST;
 
+/* -- C++20 Userspace API -- */
+#ifdef __cplusplus
+#ifndef WMSR_DEVICE_H
+#define WMSR_DEVICE_H
+
+#include <cstdint>
+#include <system_error>
+
+#include <windows.h>
+
+namespace wmsr {
+
+using u32 = std::uint32_t;
+using u64 = std::uint64_t;
+
+class device {
+public:
+    device() {
+        m_handle = CreateFileW(
+            /* lpFileName            */ MSR_WIN32_DEVICE_NAME,
+            /* dwDesiredAccess       */ GENERIC_READ | GENERIC_WRITE,
+            /* dwShareMode           */ 0,
+            /* lpSecurityAttributes  */ NULL,
+            /* dwCreationDisposition */ OPEN_EXISTING,
+            /* dwFlagsAndAttributes  */ 0,
+            /* hTemplateFile         */ NULL)
+        ;
+            
+        if (m_handle == INVALID_HANDLE_VALUE)
+            error("Failed to open MSR device");
+    }
+
+    ~device() {
+        if (m_handle != INVALID_HANDLE_VALUE)
+            CloseHandle(m_handle);
+    }
+
+    device(device const&) = delete;
+    device& operator=(device const&) = delete;
+
+    device(device&& other) noexcept
+        : m_handle(other.m_handle) {
+        other.m_handle = INVALID_HANDLE_VALUE;
+    }
+
+    device& operator=(device&& other) noexcept {
+        if (this != &other) {
+            if (m_handle != INVALID_HANDLE_VALUE)
+                CloseHandle(m_handle);
+                
+            m_handle = other.m_handle;
+            other.m_handle = INVALID_HANDLE_VALUE;
+        }
+        return *this;
+    }
+
+    u64 read(u32 const reg, u32 const cpu) const {
+        MSR_REQUEST request { 
+            .msr_no = reg, 
+            .cpu = cpu, 
+            .val = {} 
+        };
+        
+        if (ioctl(IOCTL_READ_MSR, request)) 
+            return request.val.q;
+        
+        error("IOCTL_READ_MSR failed"); 
+        return 0; // unreachable
+    }
+
+    void write(u32 const reg, u64 const value, u32 const cpu) const {
+        MSR_REQUEST request { 
+            .msr_no = reg, 
+            .cpu = cpu, 
+            .val = { .q = value } 
+        };
+
+        if (!ioctl(IOCTL_WRITE_MSR, request)) error("IOCTL_WRITE_MSR failed");
+    }
+
+private:
+    /* Helpers */
+    auto ioctl(u32 const control_code, MSR_REQUEST& request) const {
+        DWORD _;
+        return DeviceIoControl(
+            /* hDevice          */ m_handle,
+            /* dwIoControlCode  */ control_code,
+            /* lpInBuffer       */ &request,
+            /* nInBufferSize    */ sizeof(request),
+            /* lpOutBuffer      */ &request,
+            /* nOutBufferSize   */ sizeof(request),
+            /* lpBytesReturned  */ &_,
+            /* lpOverlapped     */ NULL
+        );
+    }
+
+    void error(char const* message) const {
+        throw std::system_error(GetLastError(), std::system_category(), message);
+    }
+
+    /* Members */
+    HANDLE m_handle;
+};
+
+} // namespace wmsr
+
+#endif // WMSR_DEVICE_H
+#endif // __cplusplus
+
 #endif // WMSR_H
