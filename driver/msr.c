@@ -38,7 +38,11 @@ VOID MsrDpcReadRoutine(
         context->status = GetExceptionCode();
     }
 
-    KeSetEvent(&context->done, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(
+        /* [in] Event     */ &context->done,
+        /* [in] Increment */ IO_NO_INCREMENT,
+        /* [in] Wait      */ FALSE
+    );
 }
 
 VOID MsrDpcWriteRoutine(
@@ -59,7 +63,11 @@ VOID MsrDpcWriteRoutine(
         context->status = GetExceptionCode();
     }
 
-    KeSetEvent(&context->done, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(
+        /* [in] Event     */ &context->done,
+        /* [in] Increment */ IO_NO_INCREMENT,
+        /* [in] Wait      */ FALSE
+    );
 }
 
 VOID MsrDpcMakeContext(
@@ -75,20 +83,44 @@ VOID MsrDpcExecuteRoutineOnProc(
     PKDEFERRED_ROUTINE routine, 
     PROCESSOR_NUMBER *proc_number
 ) {
-    KeInitializeEvent(&context->done, NotificationEvent, FALSE);
+    KeInitializeEvent(
+        /* [out] Event */ &context->done,
+        /* [in]  Type  */ NotificationEvent,
+        /* [in]  State */ FALSE
+    );
 
     KDPC dpc;
-    KeInitializeDpc(&dpc, routine, context);
-    KeSetImportanceDpc(&dpc, HighImportance);
-    KeSetTargetProcessorDpcEx(&dpc, proc_number);
+    KeInitializeDpc(
+        /* [out] Dpc             */ &dpc,
+        /* [in]  DeferredRoutine */ routine,
+        /* [in]  DeferredContext */ context
+    );
+    KeSetImportanceDpc(
+        /* [in,out] Dpc        */ &dpc,
+        /* [in]     Importance */ HighImportance
+    );
+    KeSetTargetProcessorDpcEx(
+        /* [in,out] Dpc        */ &dpc,
+        /* [in]     ProcNumber */ proc_number
+    );
 
-    BOOLEAN queued = KeInsertQueueDpc(&dpc, NULL, NULL);
+    BOOLEAN queued = KeInsertQueueDpc(
+        /* [in,out] Dpc             */ &dpc,
+        /* [in]     SystemArgument1 */ NULL,
+        /* [in]     SystemArgument2 */ NULL
+    );
     if (!queued) {
         context->status = STATUS_DRIVER_INTERNAL_ERROR;
         return;
     };
     
-    KeWaitForSingleObject(&context->done, Executive, KernelMode, FALSE, NULL);
+    KeWaitForSingleObject(
+        /* [in] Object     */ &context->done,
+        /* [in] WaitReason */ Executive,
+        /* [in] WaitMode   */ KernelMode,
+        /* [in] Alertable  */ FALSE,
+        /* [in] Timeout    */ NULL
+    );
 }
 
 BOOLEAN MsrIsValidCpu(
@@ -104,7 +136,10 @@ NTSTATUS MsrStatusTerminate(
 ) {
     Irp->IoStatus.Status = status;
     Irp->IoStatus.Information = info;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(
+        /* [in,out] Irp           */ Irp,
+        /* [in]     PriorityBoost */ IO_NO_INCREMENT
+    );
     return status;
 }
 
@@ -141,7 +176,10 @@ NTSTATUS MsrHandlerDeviceControl(
         return MsrStatusTerminate(Irp, STATUS_INVALID_PARAMETER, 0);
 
     PROCESSOR_NUMBER proc_number;
-    NTSTATUS proc_status = KeGetProcessorNumberFromIndex(request->cpu, &proc_number);
+    NTSTATUS proc_status = KeGetProcessorNumberFromIndex(
+        /* [in]  ProcIndex  */ request->cpu,
+        /* [out] ProcNumber */ &proc_number
+    );
     if (!NT_SUCCESS(proc_status)) 
         return MsrStatusTerminate(Irp, proc_status, 0);
 
@@ -193,15 +231,15 @@ NTSTATUS DriverEntry(
 
     PDEVICE_OBJECT device_object;
     NTSTATUS device_status = WdmlibIoCreateDeviceSecure(
-        DriverObject,
-        0,
-        &device_name,
-        FILE_DEVICE_UNKNOWN,
-        FILE_DEVICE_SECURE_OPEN,
-        FALSE,
-        &SDDL_DEVOBJ_SYS_ALL_ADM_ALL,
-        &MSR_CLASS_GUID,
-        &device_object
+        /* [in]  DriverObject          */ DriverObject,
+        /* [in]  DeviceExtensionSize   */ 0,
+        /* [in]  DeviceName            */ &device_name,
+        /* [in]  DeviceType            */ FILE_DEVICE_UNKNOWN,
+        /* [in]  DeviceCharacteristics */ FILE_DEVICE_SECURE_OPEN,
+        /* [in]  Exclusive             */ FALSE,
+        /* [in]  DefaultSDDLString     */ &SDDL_DEVOBJ_SYS_ALL_ADM_ALL,
+        /* [in]  DeviceClassGuid       */ &MSR_CLASS_GUID,
+        /* [out] DeviceObject          */ &device_object
     );
 
     if (!NT_SUCCESS(device_status))
@@ -214,7 +252,10 @@ NTSTATUS DriverEntry(
 
     UNICODE_STRING dos_name = RTL_CONSTANT_STRING(MSR_DOS_DEVICE_NAME);
 
-    NTSTATUS symlink_status = IoCreateSymbolicLink(&dos_name, &device_name);
+    NTSTATUS symlink_status = IoCreateSymbolicLink(
+        /* [in] SymbolicLinkName */ &dos_name,
+        /* [in] DeviceName       */ &device_name
+    );
     if (!NT_SUCCESS(symlink_status)) {
         IoDeleteDevice(device_object);
         return symlink_status;
