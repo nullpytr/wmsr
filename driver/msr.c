@@ -190,5 +190,26 @@ NTSTATUS DriverEntry(
     UNICODE_STRING sddl;
     RtlInitUnicodeString(&sddl, L"D:P(A;;GA;;;SY)(A;;GA;;;BA)");
 
+    PDEVICE_OBJECT device_object;
+    NTSTATUS device_status = WdmlibIoCreateDeviceSecure(
+        DriverObject,
+        0,
+        &device_name,
+        FILE_DEVICE_UNKNOWN,
+        FILE_DEVICE_SECURE_OPEN,
+        FALSE,
+        &sddl,
+        &WMSR_CLASS_GUID,
+        &device_object
+    );
+
+    if (!NT_SUCCESS(device_status))
+        return device_status;
+
+    DriverObject->MajorFunction[IRP_MJ_CREATE]         = MsrHandlerCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]          = MsrHandlerCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = MsrHandlerDeviceControl;
+    DriverObject->DriverUnload                         = DriverExit;
+
     //TODO
 }
