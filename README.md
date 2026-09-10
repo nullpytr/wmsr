@@ -1,4 +1,4 @@
-# wmsr
+# wMSR
 
 A minimal Windows kernel driver that exposes x86 **Model-Specific Register (MSR)** read/write to userspace via IOCTLs, paired with a lightweight header-only C++20 userspace library. 
 
@@ -27,7 +27,7 @@ sc start msr
 sc stop msr
 sc delete msr
 
-:: Optionally re-disable test signing
+:: Optionally disable test signing
 bcdedit /set testsigning off
 ```
 
