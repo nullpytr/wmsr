@@ -187,5 +187,8 @@ NTSTATUS DriverEntry(
     UNICODE_STRING device_name;
     RtlInitUnicodeString(&device_name, MSR_NT_DEVICE_NAME);
 
+    UNICODE_STRING sddl;
+    RtlInitUnicodeString(&sddl, L"D:P(A;;GA;;;SY)(A;;GA;;;BA)");
+
     //TODO
 }
