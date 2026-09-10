@@ -33,10 +33,10 @@ bcdedit /set testsigning off
 
 ## Userspace API
 
-Requires C++20. Drop in `wmsr.hpp` to your project's include path, and simply: 
+Requires C++20. Drop in `msr.hpp` to your project's include path, and simply: 
 
 ```cpp
-#include <wmsr.hpp>
+#include <msr.hpp>
 ```
 
 ### Example
@@ -44,7 +44,7 @@ Requires C++20. Drop in `wmsr.hpp` to your project's include path, and simply:
 ```cpp
 int main() {
     try {
-        wmsr::device dev; // opens \\.\msr; throws std::system_error on failure
+        msr::device dev; // opens \\.\msr; throws std::system_error on failure
 
         // Read MSR 0x1A2 (MSR_TEMPERATURE_TARGET) on logical CPU 0
         uint64_t value = dev.read(0x1A2, 0);

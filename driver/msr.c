@@ -1,7 +1,7 @@
 #include <ntddk.h>
 #include <wdmsec.h>
 
-#include "wmsr.hpp"
+#include "msr.hpp"
 
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD     DriverExit;
@@ -179,7 +179,7 @@ NTSTATUS DriverEntry(
 ) {
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    static const GUID WMSR_CLASS_GUID = {
+    static const GUID MSR_CLASS_GUID = {
         0x8D2432F0,
         0x85D8,
         0x4208,
@@ -201,7 +201,7 @@ NTSTATUS DriverEntry(
         FILE_DEVICE_SECURE_OPEN,
         FALSE,
         &sddl,
-        &WMSR_CLASS_GUID,
+        &MSR_CLASS_GUID,
         &device_object
     );
 

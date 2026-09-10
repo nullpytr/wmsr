@@ -1,5 +1,5 @@
-#ifndef WMSR_H
-#define WMSR_H
+#ifndef MSR_HPP
+#define MSR_HPP
 
 #ifdef __cplusplus
 #include <windows.h> // user space
@@ -38,14 +38,14 @@ typedef struct _MSR_REQUEST {
 
 /* -- C++20 Userspace API -- */
 #ifdef __cplusplus
-#ifndef WMSR_DEVICE_HPP
-#define WMSR_DEVICE_HPP
+#ifndef MSR_DEVICE_HPP
+#define MSR_DEVICE_HPP
 
 #include <utility>
 #include <cstdint>
 #include <system_error>
 
-namespace wmsr {
+namespace msr {
 
 using u32 = std::uint32_t;
 using u64 = std::uint64_t;
@@ -134,9 +134,9 @@ private:
     HANDLE m_handle;
 };
 
-} // namespace wmsr
+} // namespace msr
 
-#endif // WMSR_DEVICE_HPP
+#endif // MSR_DEVICE_HPP
 #endif // __cplusplus
 
-#endif // WMSR_H
+#endif // MSR_HPP
