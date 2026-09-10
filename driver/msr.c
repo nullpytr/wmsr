@@ -211,5 +211,14 @@ NTSTATUS DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = MsrHandlerDeviceControl;
     DriverObject->DriverUnload                         = DriverExit;
 
-    //TODO
+    UNICODE_STRING dos_name;
+    RtlInitUnicodeString(&dos_name, MSR_DOS_DEVICE_NAME);
+
+    NTSTATUS symlink_status = IoCreateSymbolicLink(&dos_name, &device_name);
+    if (!NT_SUCCESS(symlink_status)) {
+        IoDeleteDevice(device_object);
+        return symlink_status;
+    }
+
+    return STATUS_SUCCESS;
 }
