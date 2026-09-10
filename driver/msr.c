@@ -4,23 +4,23 @@
 #include "wmsr.h"
 
 DRIVER_INITIALIZE DriverEntry;
-DRIVER_UNLOAD     MsrUnload;
-DRIVER_DISPATCH   MsrCreateClose;
-DRIVER_DISPATCH   MsrDeviceControl;
-KDEFERRED_ROUTINE MsrReadDpc;
-KDEFERRED_ROUTINE MsrWriteDpc;
+DRIVER_UNLOAD     MsrHandlerUnload;
+DRIVER_DISPATCH   MsrHandlerCreateClose;
+DRIVER_DISPATCH   MsrHandlerDeviceControl;
+KDEFERRED_ROUTINE MsrDpcReadRoutine;
+KDEFERRED_ROUTINE MsrDpcWriteRoutine;
 
 #pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(PAGE, MsrCreateClose)
-#pragma alloc_text(PAGE, MsrDeviceControl)
+#pragma alloc_text(PAGE, MsrHandlerCreateClose)
+#pragma alloc_text(PAGE, MsrHandlerDeviceControl)
 
 typedef struct _MSR_DPC_CONTEXT {
-    MSR_REQUEST req;
+    MSR_REQUEST request;
     NTSTATUS    status;
     KEVENT      done;
-} MSR_DPC_CONTEXT;
+} MSR_DPC_CONTEXT, *PMSR_DPC_CONTEXT;
 
-VOID MsrReadDpc(
+VOID MsrDpcReadRoutine(
     PKDPC  Dpc,
     PVOID  DeferredContext,
     PVOID  SystemArgument1,
@@ -30,18 +30,18 @@ VOID MsrReadDpc(
     UNREFERENCED_PARAMETER(SystemArgument1);
     UNREFERENCED_PARAMETER(SystemArgument2);
 
-    MSR_DPC_CONTEXT *ctx = (MSR_DPC_CONTEXT *)DeferredContext;
+    MSR_DPC_CONTEXT *context = (MSR_DPC_CONTEXT *)DeferredContext;
     __try {
-        ctx->req.val.q = __readmsr(ctx->req.msr_no);
-        ctx->status = STATUS_SUCCESS;
+        context->request.val.q = __readmsr(context->request.msr_no);
+        context->status = STATUS_SUCCESS;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
-        ctx->status = GetExceptionCode();
+        context->status = GetExceptionCode();
     }
 
-    KeSetEvent(&ctx->done, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(&context->done, IO_NO_INCREMENT, FALSE);
 }
 
-VOID MsrWriteDpc(
+VOID MsrDpcWriteRoutine(
     PKDPC  Dpc,
     PVOID  DeferredContext,
     PVOID  SystemArgument1,
@@ -51,28 +51,33 @@ VOID MsrWriteDpc(
     UNREFERENCED_PARAMETER(SystemArgument1);
     UNREFERENCED_PARAMETER(SystemArgument2);
 
-    MSR_DPC_CONTEXT *ctx = (MSR_DPC_CONTEXT *)DeferredContext;
+    MSR_DPC_CONTEXT *context = (MSR_DPC_CONTEXT *)DeferredContext;
     __try {
-        __writemsr(ctx->req.msr_no, ctx->req.val.q);
-        ctx->status = STATUS_SUCCESS;
+        __writemsr(context->request.msr_no, context->request.val.q);
+        context->status = STATUS_SUCCESS;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
-        ctx->status = GetExceptionCode();
+        context->status = GetExceptionCode();
     }
 
-    KeSetEvent(&ctx->done, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(&context->done, IO_NO_INCREMENT, FALSE);
 }
 
-NTSTATUS MsrCreateClose(
+NTSTATUS MsrStatusTerminate(
+    PIRP     Irp,
+    NTSTATUS status,
+    ULONG    info
+) {
+    Irp->IoStatus.Status = status;
+    Irp->IoStatus.Information = info;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return status;
+}
+
+NTSTATUS MsrHandlerCreateClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP           Irp
 ) {
     PAGED_CODE();
-
     UNREFERENCED_PARAMETER(DeviceObject);
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = NULL;
-    
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return MsrStatusTerminate(Irp, STATUS_SUCCESS, 0);
 }
