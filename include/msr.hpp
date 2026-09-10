@@ -62,13 +62,13 @@ class device {
 public:
     device() {
         m_handle = CreateFileW(
-            /* lpFileName            */ MSR_WIN32_DEVICE_NAME,
-            /* dwDesiredAccess       */ GENERIC_READ | GENERIC_WRITE,
-            /* dwShareMode           */ 0,
-            /* lpSecurityAttributes  */ NULL,
-            /* dwCreationDisposition */ OPEN_EXISTING,
-            /* dwFlagsAndAttributes  */ 0,
-            /* hTemplateFile         */ NULL)
+            /* [in] lpFileName            */ MSR_WIN32_DEVICE_NAME,
+            /* [in] dwDesiredAccess       */ GENERIC_READ | GENERIC_WRITE,
+            /* [in] dwShareMode           */ 0,
+            /* [in] lpSecurityAttributes  */ NULL,
+            /* [in] dwCreationDisposition */ OPEN_EXISTING,
+            /* [in] dwFlagsAndAttributes  */ 0,
+            /* [in] hTemplateFile         */ NULL)
         ;
             
         if (m_handle == INVALID_HANDLE_VALUE)
@@ -122,14 +122,14 @@ private:
     auto ioctl(u32 const control_code, MSR_REQUEST& request) const {
         [[maybe_unused]] DWORD bytes_returned;
         return DeviceIoControl(
-            /* hDevice          */ m_handle,
-            /* dwIoControlCode  */ control_code,
-            /* lpInBuffer       */ &request,
-            /* nInBufferSize    */ sizeof(request),
-            /* lpOutBuffer      */ &request,
-            /* nOutBufferSize   */ sizeof(request),
-            /* lpBytesReturned  */ &bytes_returned,
-            /* lpOverlapped     */ NULL
+            /* [in]  hDevice          */ m_handle,
+            /* [in]  dwIoControlCode  */ control_code,
+            /* [in]  lpInBuffer       */ &request,
+            /* [in]  nInBufferSize    */ sizeof(request),
+            /* [out] lpOutBuffer      */ &request,
+            /* [in]  nOutBufferSize   */ sizeof(request),
+            /* [out] lpBytesReturned  */ &bytes_returned,
+            /* [in]  lpOverlapped     */ NULL
         );
     }
 
