@@ -86,29 +86,29 @@ VOID MsrDpcExecuteRoutineOnProc(
 ) {
     KeInitializeEvent(
         /* [out] Event */ &context->done,
-        /* [in]  Type  */ NotificationEvent,
-        /* [in]  State */ FALSE
+        /* [in ] Type  */ NotificationEvent,
+        /* [in ] State */ FALSE
     );
 
     KDPC dpc;
     KeInitializeDpc(
         /* [out] Dpc             */ &dpc,
-        /* [in]  DeferredRoutine */ routine,
-        /* [in]  DeferredContext */ context
+        /* [in ] DeferredRoutine */ routine,
+        /* [in ] DeferredContext */ context
     );
     KeSetImportanceDpc(
         /* [in,out] Dpc        */ &dpc,
-        /* [in]     Importance */ HighImportance
+        /* [in    ] Importance */ HighImportance
     );
     KeSetTargetProcessorDpcEx(
         /* [in,out] Dpc        */ &dpc,
-        /* [in]     ProcNumber */ proc_number
+        /* [in    ] ProcNumber */ proc_number
     );
 
     BOOLEAN queued = KeInsertQueueDpc(
         /* [in,out] Dpc             */ &dpc,
-        /* [in]     SystemArgument1 */ NULL,
-        /* [in]     SystemArgument2 */ NULL
+        /* [in    ] SystemArgument1 */ NULL,
+        /* [in    ] SystemArgument2 */ NULL
     );
     if (!queued) {
         context->status = STATUS_DRIVER_INTERNAL_ERROR;
@@ -139,7 +139,7 @@ NTSTATUS MsrStatusTerminate(
     Irp->IoStatus.Information = info;
     IoCompleteRequest(
         /* [in,out] Irp           */ Irp,
-        /* [in]     PriorityBoost */ IO_NO_INCREMENT
+        /* [in    ] PriorityBoost */ IO_NO_INCREMENT
     );
     return status;
 }
@@ -178,7 +178,7 @@ NTSTATUS MsrHandlerDeviceControl(
 
     PROCESSOR_NUMBER proc_number;
     NTSTATUS proc_status = KeGetProcessorNumberFromIndex(
-        /* [in]  ProcIndex  */ request->cpu,
+        /* [in ] ProcIndex  */ request->cpu,
         /* [out] ProcNumber */ &proc_number
     );
     if (!NT_SUCCESS(proc_status)) 
@@ -232,14 +232,14 @@ NTSTATUS DriverEntry(
 
     PDEVICE_OBJECT device_object;
     NTSTATUS device_status = WdmlibIoCreateDeviceSecure(
-        /* [in]  DriverObject          */ DriverObject,
-        /* [in]  DeviceExtensionSize   */ 0,
-        /* [in]  DeviceName            */ &device_name,
-        /* [in]  DeviceType            */ FILE_DEVICE_UNKNOWN,
-        /* [in]  DeviceCharacteristics */ FILE_DEVICE_SECURE_OPEN,
-        /* [in]  Exclusive             */ FALSE,
-        /* [in]  DefaultSDDLString     */ &SDDL_DEVOBJ_SYS_ALL_ADM_ALL,
-        /* [in]  DeviceClassGuid       */ &MSR_CLASS_GUID,
+        /* [in ] DriverObject          */ DriverObject,
+        /* [in ] DeviceExtensionSize   */ 0,
+        /* [in ] DeviceName            */ &device_name,
+        /* [in ] DeviceType            */ FILE_DEVICE_UNKNOWN,
+        /* [in ] DeviceCharacteristics */ FILE_DEVICE_SECURE_OPEN,
+        /* [in ] Exclusive             */ FALSE,
+        /* [in ] DefaultSDDLString     */ &SDDL_DEVOBJ_SYS_ALL_ADM_ALL,
+        /* [in ] DeviceClassGuid       */ &MSR_CLASS_GUID,
         /* [out] DeviceObject          */ &device_object
     );
 
