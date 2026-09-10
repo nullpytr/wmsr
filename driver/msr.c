@@ -81,3 +81,35 @@ NTSTATUS MsrHandlerCreateClose(
     UNREFERENCED_PARAMETER(DeviceObject);
     return MsrStatusTerminate(Irp, STATUS_SUCCESS, 0);
 }
+
+BOOLEAN MsrCheckIsValidCpu(
+    MSR_CPU cpu
+) { 
+    return cpu < KeQueryActiveProcessorCountEx(ALL_PROCESSOR_GROUPS); 
+}
+
+NTSTATUS MsrHandlerDeviceControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP           Irp
+) {
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MSR_REQUEST))
+        return MsrStatusTerminate(Irp, STATUS_BUFFER_TOO_SMALL, 0);
+
+    ULONG control_code = stack->Parameters.DeviceIoControl.IoControlCode;
+
+    if (control_code != IOCTL_READ_MSR && control_code != IOCTL_WRITE_MSR)
+        return MsrStatusTerminate(Irp, STATUS_INVALID_DEVICE_REQUEST, 0);
+
+    PMSR_REQUEST request = (PMSR_REQUEST)Irp->AssociatedIrp.SystemBuffer;
+
+    if (!MsrCheckIsValidCpu(request->cpu)) 
+        return MsrStatusTerminate(Irp, STATUS_INVALID_PARAMETER, 0);
+
+    // TODO
+}
