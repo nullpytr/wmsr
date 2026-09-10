@@ -1,16 +1,11 @@
 #ifndef MSR_HPP
 #define MSR_HPP
 
-#ifdef __cplusplus
-#include <windows.h> // user space
+#ifdef MSR_HPP_KERNEL_DRIVER_MODE
+#include <ntddk.h>
 #else
-#include <ntddk.h> // kernel space
+#include <windows.h>
 #endif
-
-#ifndef MSR_H
-#define MSR_H
-// This include guard is purely cosmetic to show that this portion of the
-// header is shared between the kernel driver and the user space library.
 
 #define MSR_DEVICE_TYPE 40000
 #define IOCTL_READ_MSR  CTL_CODE(MSR_DEVICE_TYPE, 0x800, METHOD_BUFFERED, FILE_READ_ACCESS)
@@ -44,10 +39,8 @@ typedef struct _MSR_REQUEST {
     MSR_VALUE val;
 } MSR_REQUEST, *PMSR_REQUEST;
 
-#endif // MSR_H
-
 /* -- C++20 Userspace API -- */
-#ifdef __cplusplus
+#ifndef MSR_HPP_KERNEL_DRIVER_MODE
 
 #include <utility>
 #include <cstdint>
@@ -143,6 +136,6 @@ private:
 
 } // namespace msr
 
-#endif // __cplusplus
+#endif // !MSR_HPP_KERNEL_DRIVER_MODE
 
 #endif // MSR_HPP

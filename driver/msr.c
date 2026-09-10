@@ -1,6 +1,7 @@
 #include <ntddk.h>
 #include <wdmsec.h>
 
+#define MSR_HPP_KERNEL_DRIVER_MODE
 #include "msr.hpp"
 
 DRIVER_INITIALIZE DriverEntry;
