@@ -79,6 +79,7 @@ VOID MsrDpcExecuteRoutineOnProc(
 
     KDPC dpc;
     KeInitializeDpc(&dpc, routine, context);
+    KeSetImportanceDpc(&dpc, HighImportance);
     KeSetTargetProcessorDpcEx(&dpc, proc_number);
 
     BOOLEAN queued = KeInsertQueueDpc(&dpc, NULL, NULL);
