@@ -45,8 +45,6 @@ typedef struct _MSR_REQUEST {
 #include <cstdint>
 #include <system_error>
 
-#include <windows.h>
-
 namespace wmsr {
 
 using u32 = std::uint32_t;
