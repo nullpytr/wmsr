@@ -115,7 +115,7 @@ public:
 private:
     /* Helpers */
     auto ioctl(u32 const control_code, MSR_REQUEST& request) const {
-        DWORD _;
+        [[maybe_unused]] DWORD bytes_returned;
         return DeviceIoControl(
             /* hDevice          */ m_handle,
             /* dwIoControlCode  */ control_code,
@@ -123,7 +123,7 @@ private:
             /* nInBufferSize    */ sizeof(request),
             /* lpOutBuffer      */ &request,
             /* nOutBufferSize   */ sizeof(request),
-            /* lpBytesReturned  */ &_,
+            /* lpBytesReturned  */ &bytes_returned,
             /* lpOverlapped     */ NULL
         );
     }
