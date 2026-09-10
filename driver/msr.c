@@ -1,7 +1,7 @@
 #include <ntddk.h>
 #include <wdmsec.h>
 
-#include "wmsr.h"
+#include "wmsr.hpp"
 
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD     DriverExit;

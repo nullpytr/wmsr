@@ -33,10 +33,10 @@ bcdedit /set testsigning off
 
 ## Userspace API
 
-Requires C++20. Drop in `wmsr.h` to your project's include path, and simply: 
+Requires C++20. Drop in `wmsr.hpp` to your project's include path, and simply: 
 
 ```cpp
-#include <wmsr.h>
+#include <wmsr.hpp>
 ```
 
 ### Example

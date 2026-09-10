@@ -38,8 +38,8 @@ typedef struct _MSR_REQUEST {
 
 /* -- C++20 Userspace API -- */
 #ifdef __cplusplus
-#ifndef WMSR_DEVICE_H
-#define WMSR_DEVICE_H
+#ifndef WMSR_DEVICE_HPP
+#define WMSR_DEVICE_HPP
 
 #include <utility>
 #include <cstdint>
@@ -136,7 +136,7 @@ private:
 
 } // namespace wmsr
 
-#endif // WMSR_DEVICE_H
+#endif // WMSR_DEVICE_HPP
 #endif // __cplusplus
 
 #endif // WMSR_H
