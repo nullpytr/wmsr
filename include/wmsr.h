@@ -76,10 +76,7 @@ public:
     device(device const&) = delete;
     device& operator=(device const&) = delete;
 
-    device(device&& other) noexcept
-        : m_handle(other.m_handle) {
-        other.m_handle = INVALID_HANDLE_VALUE;
-    }
+    device(device&& other) noexcept : m_handle(std::exchange(other.m_handle, INVALID_HANDLE_VALUE)) {}
 
     device& operator=(device&& other) noexcept {
         if (this != &other) {
