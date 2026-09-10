@@ -83,7 +83,10 @@ VOID MsrDpcExecuteRoutineOnProc(
     KeSetTargetProcessorDpcEx(&dpc, proc_number);
 
     BOOLEAN queued = KeInsertQueueDpc(&dpc, NULL, NULL);
-    NT_ASSERT(queued);
+    if (!queued) {
+        context->status = STATUS_DRIVER_INTERNAL_ERROR;
+        return;
+    };
     
     KeWaitForSingleObject(&context->done, Executive, KernelMode, FALSE, NULL);
 }
