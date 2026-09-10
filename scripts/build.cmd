@@ -8,7 +8,11 @@ if "%CONFIGURATION%"=="" set CONFIGURATION=Release
 if "%PLATFORM%"=="" set PLATFORM=x64
 
 set SCRIPT_DIR=%~dp0
-set DRIVER_DIR=%SCRIPT_DIR%..\driver
+
+:: build.cmd is in ROOT/scripts/
+set PROJECT_DIR=%SCRIPT_DIR%..
+
+set DRIVER_DIR=%PROJECT_DIR%\driver
 
 echo Building msr.sys  configuration=%CONFIGURATION%  platform=%PLATFORM%
 
