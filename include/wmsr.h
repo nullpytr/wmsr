@@ -99,8 +99,7 @@ public:
         if (ioctl(IOCTL_READ_MSR, request)) 
             return request.val.q;
         
-        error("IOCTL_READ_MSR failed"); 
-        return 0; // unreachable
+        error("IOCTL_READ_MSR failed");
     }
 
     void write(u32 const reg, u64 const value, u32 const cpu) const {
@@ -129,7 +128,7 @@ private:
         );
     }
 
-    void error(char const* message) const {
+    [[noreturn]] void error(char const* message) const {
         throw std::system_error(GetLastError(), std::system_category(), message);
     }
 
