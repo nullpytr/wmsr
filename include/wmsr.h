@@ -19,20 +19,25 @@
 #define MSR_DOS_DEVICE_NAME     L"\\DosDevices\\msr"
 #define MSR_WIN32_DEVICE_NAME   L"\\\\.\\msr"
 
+typedef unsigned __int32 MSR_DOUBLE;
+typedef unsigned __int64 MSR_QUAD;
+typedef unsigned __int32 MSR_NO;
+typedef unsigned __int32 MSR_CPU;
+
 typedef struct _MSR_VALUE {
     union {
         struct {
-            unsigned __int32 l;
-            unsigned __int32 h;
+            MSR_DOUBLE l;
+            MSR_DOUBLE h;
         };
-        unsigned __int64 q;
+        MSR_QUAD q;
     };
 } MSR_VALUE;
 
 typedef struct _MSR_REQUEST {
-    unsigned __int32 msr_no;
-    unsigned __int32 cpu;
-    MSR_VALUE        val;
+    MSR_NO    msr_no;
+    MSR_CPU   cpu;
+    MSR_VALUE val;
 } MSR_REQUEST, *PMSR_REQUEST;
 
 #endif // WMSR_H
