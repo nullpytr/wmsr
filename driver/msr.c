@@ -170,3 +170,22 @@ VOID DriverExit(
     IoDeleteSymbolicLink(&dos_name);
     IoDeleteDevice(DriverObject->DeviceObject);
 }
+
+NTSTATUS DriverEntry(
+    PDRIVER_OBJECT  DriverObject,
+    PUNICODE_STRING RegistryPath
+) {
+    UNREFERENCED_PARAMETER(RegistryPath);
+
+    static const GUID WMSR_CLASS_GUID = {
+        0x8D2432F0,
+        0x85D8,
+        0x4208,
+        { 0xBF, 0x0E, 0x38, 0x77, 0xF5, 0x44, 0xD8, 0x23 }
+    };
+
+    UNICODE_STRING device_name;
+    RtlInitUnicodeString(&device_name, MSR_NT_DEVICE_NAME);
+
+    //TODO
+}
