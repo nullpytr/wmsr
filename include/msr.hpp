@@ -25,6 +25,8 @@ typedef unsigned __int64 MSR_QUAD;
 typedef unsigned __int32 MSR_NO;
 typedef unsigned __int32 MSR_CPU;
 
+#pragma warning(push)
+#pragma warning(disable: 4201)
 typedef struct _MSR_VALUE {
     union {
         struct {
@@ -34,6 +36,7 @@ typedef struct _MSR_VALUE {
         MSR_QUAD q;
     };
 } MSR_VALUE;
+#pragma warning(pop)
 
 typedef struct _MSR_REQUEST {
     MSR_NO    msr_no;
