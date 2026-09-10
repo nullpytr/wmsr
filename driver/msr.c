@@ -111,5 +111,10 @@ NTSTATUS MsrHandlerDeviceControl(
     if (!MsrCheckIsValidCpu(request->cpu)) 
         return MsrStatusTerminate(Irp, STATUS_INVALID_PARAMETER, 0);
 
+    PROCESSOR_NUMBER proc_number;
+    NTSTATUS proc_status = KeGetProcessorNumberFromIndex(request->cpu, &proc_number);
+    if (!NT_SUCCESS(proc_status)) 
+        return MsrStatusTerminate(Irp, proc_status, 0);
+
     // TODO
 }
