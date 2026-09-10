@@ -41,6 +41,7 @@ typedef struct _MSR_REQUEST {
 #ifndef WMSR_DEVICE_H
 #define WMSR_DEVICE_H
 
+#include <utility>
 #include <cstdint>
 #include <system_error>
 
@@ -82,12 +83,11 @@ public:
         if (this != &other) {
             if (m_handle != INVALID_HANDLE_VALUE)
                 CloseHandle(m_handle);
-                
-            m_handle = other.m_handle;
-            other.m_handle = INVALID_HANDLE_VALUE;
+            m_handle = std::exchange(other.m_handle, INVALID_HANDLE_VALUE);
         }
         return *this;
     }
+
 
     u64 read(u32 const reg, u32 const cpu) const {
         MSR_REQUEST request { 
