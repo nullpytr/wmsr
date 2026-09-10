@@ -7,6 +7,11 @@
 #include <ntddk.h> // kernel space
 #endif
 
+#ifndef MSR_H
+#define MSR_H
+// This include guard is purely cosmetic to show that this portion of the
+// header is shared between the kernel driver and the user space library.
+
 #define MSR_DEVICE_TYPE 40000
 #define IOCTL_READ_MSR  CTL_CODE(MSR_DEVICE_TYPE, 0x800, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_WRITE_MSR CTL_CODE(MSR_DEVICE_TYPE, 0x801, METHOD_BUFFERED, FILE_WRITE_ACCESS)
@@ -36,10 +41,10 @@ typedef struct _MSR_REQUEST {
     MSR_VALUE val;
 } MSR_REQUEST, *PMSR_REQUEST;
 
+#endif // MSR_H
+
 /* -- C++20 Userspace API -- */
 #ifdef __cplusplus
-#ifndef MSR_DEVICE_HPP
-#define MSR_DEVICE_HPP
 
 #include <utility>
 #include <cstdint>
@@ -85,7 +90,6 @@ public:
         }
         return *this;
     }
-
 
     u64 read(u32 const reg, u32 const cpu) const {
         MSR_REQUEST request { 
@@ -136,7 +140,6 @@ private:
 
 } // namespace msr
 
-#endif // MSR_DEVICE_HPP
 #endif // __cplusplus
 
 #endif // MSR_HPP
