@@ -1,8 +1,8 @@
 # wMSR
 
-A minimal Windows kernel driver that exposes x86 **Model-Specific Register (MSR)** read/write to userspace via IOCTLs, paired with a lightweight header-only C++20 userspace library. 
+A minimal Windows kernel driver that exposes x86 **Model-Specific Register (MSR)** read/write to userspace via IOCTLs, paired with a header-only userspace library with C99 and C++20 APIs.
 
-CPUs with >64 cores are handled properly, and the device `\\.\msr` is accessible to **SYSTEM** and **Administrators** only.  
+CPUs with >64 cores are handled properly, and the device `\\.\msr` is accessible to **SYSTEM** and **Administrators** only.
 
 Inspired by the Linux `msr` kernel module (`arch/x86/kernel/msr.c`).
 
@@ -33,13 +33,13 @@ bcdedit /set testsigning off
 
 ## Userspace API
 
-Requires C++20. Drop in `msr.hpp` to your project's include path, and simply: 
+Drop `msr.hpp` into your project's include path and include it:
 
-```cpp
+```c
 #include <msr.hpp>
 ```
 
-### Example
+### C++20
 
 ```cpp
 int main() {
@@ -57,6 +57,26 @@ int main() {
     }
 }
 ```
+
+### C99
+
+```c
+int main(void) {
+    HANDLE dev = msr_open(); // opens \\.\msr; returns INVALID_HANDLE_VALUE on failure
+
+    // Read MSR 0x1A2 (MSR_TEMPERATURE_TARGET) on logical CPU 0
+    MSR_QUAD value;
+    msr_read(dev, 0x1A2, 0, &value);
+
+    // Write a value to an MSR on logical CPU 0
+    msr_write(dev, 0x1A2, 0x3640000, 0);
+
+    msr_close(dev);
+}
+```
+
+`msr_read` and `msr_write` return `BOOL`. On failure, call `GetLastError()` for the error code.
+
 
 ## IOCTL interface
 
@@ -99,5 +119,5 @@ The driver is output at `driver\<platform>\<configuration>\msr.sys`
 
 - Windows 10 x64 (or later)
 - **Visual Studio** with the C++ desktop & WDK workload
-- **Windows Development SDK** matching the installed VS version
+- **Windows SDK** matching the installed VS version
 - **Windows Driver Kit (WDK)** matching the installed SDK version

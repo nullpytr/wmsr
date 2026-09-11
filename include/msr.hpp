@@ -39,8 +39,62 @@ typedef struct _MSR_REQUEST {
     MSR_VALUE val;
 } MSR_REQUEST, *PMSR_REQUEST;
 
-/* -- C++20 Userspace API -- */
+/* -- Userspace API -- */
 #ifndef MSR_HPP_KERNEL_DRIVER_MODE
+#ifdef __cplusplus
+namespace msr::detail { // C++ wraps the C API with msr::device
+#endif
+
+static inline HANDLE msr_open(void) {
+    return CreateFileW(
+        /* [in] lpFileName            */ MSR_WIN32_DEVICE_NAME,
+        /* [in] dwDesiredAccess       */ GENERIC_READ | GENERIC_WRITE,
+        /* [in] dwShareMode           */ 0,
+        /* [in] lpSecurityAttributes  */ NULL,
+        /* [in] dwCreationDisposition */ OPEN_EXISTING,
+        /* [in] dwFlagsAndAttributes  */ 0,
+        /* [in] hTemplateFile         */ NULL
+    );
+}
+
+static inline void msr_close(HANDLE device) {
+    CloseHandle(device);
+}
+
+static inline BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUEST request) {
+    DWORD bytes_returned;
+    return DeviceIoControl(
+        /* [in ] hDevice          */ device,
+        /* [in ] dwIoControlCode  */ control_code,
+        /* [in ] lpInBuffer       */ request,
+        /* [in ] nInBufferSize    */ sizeof(MSR_REQUEST),
+        /* [out] lpOutBuffer      */ request,
+        /* [in ] nOutBufferSize   */ sizeof(MSR_REQUEST),
+        /* [out] lpBytesReturned  */ &bytes_returned,
+        /* [in ] lpOverlapped     */ NULL
+    );
+}
+
+static inline BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value) {
+    MSR_REQUEST request = {
+        .msr_no = reg,
+        .cpu = cpu
+    };
+    BOOL result = msr_ioctl(device, IOCTL_READ_MSR, &request);
+    if (result) *value = request.val.q;
+    return result;
+}
+
+static inline BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu) {
+    MSR_REQUEST request = { 
+        .msr_no = reg,
+        .cpu = cpu,
+        .val = { .q = value }
+    };
+    return msr_ioctl(device, IOCTL_WRITE_MSR, &request);
+}
+#ifdef __cplusplus
+} // namespace msr::detail
 
 #include <utility>
 #include <cstdint>
@@ -54,15 +108,7 @@ using u64 = std::uint64_t;
 class device {
 public:
     device() {
-        m_handle = CreateFileW(
-            /* [in] lpFileName            */ MSR_WIN32_DEVICE_NAME,
-            /* [in] dwDesiredAccess       */ GENERIC_READ | GENERIC_WRITE,
-            /* [in] dwShareMode           */ 0,
-            /* [in] lpSecurityAttributes  */ NULL,
-            /* [in] dwCreationDisposition */ OPEN_EXISTING,
-            /* [in] dwFlagsAndAttributes  */ 0,
-            /* [in] hTemplateFile         */ NULL)
-        ;
+        m_handle = detail::msr_open();
             
         if (m_handle == INVALID_HANDLE_VALUE)
             error("Failed to open MSR device");
@@ -70,7 +116,7 @@ public:
 
     ~device() {
         if (m_handle != INVALID_HANDLE_VALUE)
-            CloseHandle(m_handle);
+            detail::msr_close(m_handle);
     }
 
     device(device const&) = delete;
@@ -81,51 +127,27 @@ public:
     device& operator=(device&& other) noexcept {
         if (this != &other) {
             if (m_handle != INVALID_HANDLE_VALUE)
-                CloseHandle(m_handle);
+                detail::msr_close(m_handle);
             m_handle = std::exchange(other.m_handle, INVALID_HANDLE_VALUE);
         }
         return *this;
     }
 
     u64 read(u32 const reg, u32 const cpu) const {
-        MSR_REQUEST request { 
-            .msr_no = reg, 
-            .cpu = cpu, 
-            .val = {} 
-        };
+        u64 value;
+        if (!detail::msr_read(m_handle, reg, cpu, &value))
+            error("IOCTL_READ_MSR failed");
 
-        if (ioctl(IOCTL_READ_MSR, request)) 
-            return request.val.q;
-        
-        error("IOCTL_READ_MSR failed");
+        return value;
     }
 
     void write(u32 const reg, u64 const value, u32 const cpu) const {
-        MSR_REQUEST request { 
-            .msr_no = reg, 
-            .cpu = cpu, 
-            .val = { .q = value } 
-        };
-
-        if (!ioctl(IOCTL_WRITE_MSR, request)) error("IOCTL_WRITE_MSR failed");
+        if (!detail::msr_write(m_handle, reg, value, cpu))
+            error("IOCTL_WRITE_MSR failed");
     }
 
 private:
     /* Helpers */
-    auto ioctl(u32 const control_code, MSR_REQUEST& request) const {
-        [[maybe_unused]] DWORD bytes_returned;
-        return DeviceIoControl(
-            /* [in ] hDevice          */ m_handle,
-            /* [in ] dwIoControlCode  */ control_code,
-            /* [in ] lpInBuffer       */ &request,
-            /* [in ] nInBufferSize    */ sizeof(request),
-            /* [out] lpOutBuffer      */ &request,
-            /* [in ] nOutBufferSize   */ sizeof(request),
-            /* [out] lpBytesReturned  */ &bytes_returned,
-            /* [in ] lpOverlapped     */ NULL
-        );
-    }
-
     [[noreturn]] void error(char const* message) const {
         throw std::system_error(GetLastError(), std::system_category(), message);
     }
@@ -136,6 +158,7 @@ private:
 
 } // namespace msr
 
+#endif // __cplusplus
 #endif // !MSR_HPP_KERNEL_DRIVER_MODE
 
 #endif // MSR_HPP
