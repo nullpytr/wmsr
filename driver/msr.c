@@ -31,7 +31,7 @@ VOID MsrDpcReadRoutine(
     UNREFERENCED_PARAMETER(SystemArgument1);
     UNREFERENCED_PARAMETER(SystemArgument2);
 
-    MSR_DPC_CONTEXT *context = (MSR_DPC_CONTEXT *)DeferredContext;
+    PMSR_DPC_CONTEXT context = (PMSR_DPC_CONTEXT)DeferredContext;
     __try {
         context->request.val.q = __readmsr(context->request.msr_no);
         context->status = STATUS_SUCCESS;
@@ -56,7 +56,7 @@ VOID MsrDpcWriteRoutine(
     UNREFERENCED_PARAMETER(SystemArgument1);
     UNREFERENCED_PARAMETER(SystemArgument2);
 
-    MSR_DPC_CONTEXT *context = (MSR_DPC_CONTEXT *)DeferredContext;
+    PMSR_DPC_CONTEXT context = (PMSR_DPC_CONTEXT)DeferredContext;
     __try {
         __writemsr(context->request.msr_no, context->request.val.q);
         context->status = STATUS_SUCCESS;
