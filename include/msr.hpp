@@ -42,10 +42,13 @@ typedef struct _MSR_REQUEST {
 /* -- Userspace API -- */
 #ifndef MSR_HPP_KERNEL_DRIVER_MODE
 #ifdef __cplusplus
+#define MSR_INLINE inline
 namespace msr::detail { // C++ wraps the C API with msr::device
+#else
+#define MSR_INLINE static inline
 #endif
 
-static inline HANDLE msr_open(void) {
+MSR_INLINE HANDLE msr_open(void) {
     return CreateFileW(
         /* [in] lpFileName            */ MSR_WIN32_DEVICE_NAME,
         /* [in] dwDesiredAccess       */ GENERIC_READ | GENERIC_WRITE,
@@ -57,11 +60,11 @@ static inline HANDLE msr_open(void) {
     );
 }
 
-static inline void msr_close(HANDLE device) {
+MSR_INLINE void msr_close(HANDLE device) {
     CloseHandle(device);
 }
 
-static inline BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUEST request) {
+MSR_INLINE BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUEST request) {
     DWORD bytes_returned;
     return DeviceIoControl(
         /* [in ] hDevice          */ device,
@@ -75,7 +78,7 @@ static inline BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUE
     );
 }
 
-static inline BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value) {
+MSR_INLINE BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value) {
     MSR_REQUEST request = {
         .msr_no = reg,
         .cpu = cpu
@@ -85,7 +88,7 @@ static inline BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *va
     return result;
 }
 
-static inline BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu) {
+MSR_INLINE BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu) {
     MSR_REQUEST request = { 
         .msr_no = reg,
         .cpu = cpu,
