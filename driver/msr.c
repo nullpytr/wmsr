@@ -4,6 +4,9 @@
 #define MSR_HPP_KERNEL_DRIVER_MODE
 #include "msr.hpp"
 
+static UNICODE_STRING MSR_NT_DEVICE_NAME_U  = RTL_CONSTANT_STRING(MSR_NT_DEVICE_NAME);
+static UNICODE_STRING MSR_DOS_DEVICE_NAME_U = RTL_CONSTANT_STRING(MSR_DOS_DEVICE_NAME);
+
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD     DriverExit;
 DRIVER_DISPATCH   MsrHandlerCreateClose;
@@ -210,8 +213,7 @@ NTSTATUS MsrHandlerDeviceControl(
 VOID DriverExit(
     PDRIVER_OBJECT DriverObject
 ) {
-    UNICODE_STRING dos_name = RTL_CONSTANT_STRING(MSR_DOS_DEVICE_NAME);
-    IoDeleteSymbolicLink(&dos_name);
+    IoDeleteSymbolicLink(&MSR_DOS_DEVICE_NAME_U);
     IoDeleteDevice(DriverObject->DeviceObject);
 }
 
@@ -228,13 +230,11 @@ NTSTATUS DriverEntry(
         { 0xBF, 0x0E, 0x38, 0x77, 0xF5, 0x44, 0xD8, 0x23 }
     };
 
-    UNICODE_STRING device_name = RTL_CONSTANT_STRING(MSR_NT_DEVICE_NAME);
-
     PDEVICE_OBJECT device_object;
     NTSTATUS device_status = WdmlibIoCreateDeviceSecure(
         /* [in ] DriverObject          */ DriverObject,
         /* [in ] DeviceExtensionSize   */ 0,
-        /* [in ] DeviceName            */ &device_name,
+        /* [in ] DeviceName            */ &MSR_NT_DEVICE_NAME_U,
         /* [in ] DeviceType            */ FILE_DEVICE_UNKNOWN,
         /* [in ] DeviceCharacteristics */ FILE_DEVICE_SECURE_OPEN,
         /* [in ] Exclusive             */ FALSE,
@@ -251,11 +251,9 @@ NTSTATUS DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = MsrHandlerDeviceControl;
     DriverObject->DriverUnload                         = DriverExit;
 
-    UNICODE_STRING dos_name = RTL_CONSTANT_STRING(MSR_DOS_DEVICE_NAME);
-
     NTSTATUS symlink_status = IoCreateSymbolicLink(
-        /* [in] SymbolicLinkName */ &dos_name,
-        /* [in] DeviceName       */ &device_name
+        /* [in] SymbolicLinkName */ &MSR_DOS_DEVICE_NAME_U,
+        /* [in] DeviceName       */ &MSR_NT_DEVICE_NAME_U
     );
     if (!NT_SUCCESS(symlink_status)) {
         IoDeleteDevice(device_object);
