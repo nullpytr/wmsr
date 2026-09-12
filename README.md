@@ -2,9 +2,9 @@
 
 A minimal Windows kernel driver that exposes x86 **Model-Specific Register (MSR)** read/write to userspace via IOCTLs, paired with a header-only userspace library for C99 and C++20.
 
-CPUs with >64 cores are handled properly, and the device `\\.\msr` is accessible to **SYSTEM** and **Administrators** only.
+CPUs with >64 cores are handled properly, and the device `\\.\msr` is accessible to **SYSTEM** and **Administrators** only, keeping the driver secure.
 
-Inspired by the Linux `msr` kernel module (`arch/x86/kernel/msr.c`).
+Inspired by the Linux `msr` kernel module [`arch/x86/kernel/msr.c`](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/msr.c).
 
 ## Usage
 
