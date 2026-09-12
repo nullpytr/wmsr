@@ -116,7 +116,7 @@ VOID MsrDpcExecuteRoutineOnProc(
     if (!queued) {
         context->status = STATUS_DRIVER_INTERNAL_ERROR;
         return;
-    };
+    }
     
     KeWaitForSingleObject(
         /* [in] Object     */ &context->done,
