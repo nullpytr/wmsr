@@ -8,28 +8,41 @@ Inspired by the Linux `msr` kernel module (`arch/x86/kernel/msr.c`).
 
 ## Usage
 
-### Loading the `msr.sys` driver
+### Download the latest release
+Download `msr.sys` from the [latest release](../../releases/latest) and place it at `C:\msr.sys`.
+
+### Load the `msr.sys` driver (from elevated command prompt)
 
 > **Note:** Test-signed drivers require test signing mode to be enabled. This is a one-time step that requires a reboot.
-
 ```cmd
-:: Enable test signing (one-time, requires reboot)
 bcdedit /set testsigning on
+```
 
-:: Create and start the driver service
-sc create msr type= kernel binPath= C:\full\path\to\msr.sys
+Make sure to reboot, then create and start the driver service:
+```cmd
+sc create msr type= kernel binPath= C:\msr.sys
 sc start msr
 ```
 
-### Unloading the `msr.sys` driver
+> ### Uninstallation
 
+Stop and delete the driver service:
 ```cmd
 sc stop msr
 sc delete msr
+```
 
-:: Optionally disable test signing
+Delete the `msr.sys` driver binary itself:
+```cmd
+del C:\msr.sys
+```
+
+Disable test signing mode:
+```cmd
 bcdedit /set testsigning off
 ```
+
+and reboot.
 
 ## Userspace API
 
