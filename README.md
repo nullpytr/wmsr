@@ -46,10 +46,10 @@ try {
     msr::device dev; // opens \\.\msr; throws std::system_error on failure
 
     // Read MSR 0x1A2 (MSR_TEMPERATURE_TARGET) on logical CPU 0
-    uint64_t value = dev.read(0x1A2, 0);
+    uint64_t value = dev.read(0, 0x1A2);
 
     // Write a value to an MSR on logical CPU 0
-    dev.write(0x1A2, 0x3640000, 0);
+    dev.write(0, 0x1A2, 0x3640000);
 
 } catch (std::exception const& error) {
     std::cerr << "Error: " << error.what();
@@ -63,10 +63,10 @@ HANDLE dev = msr_open(); // opens \\.\msr; returns INVALID_HANDLE_VALUE on failu
 
 // Read MSR 0x1A2 (MSR_TEMPERATURE_TARGET) on logical CPU 0
 MSR_QUAD value;
-msr_read(dev, 0x1A2, 0, &value);
+msr_read(dev, 0, 0x1A2, &value);
 
 // Write a value to an MSR on logical CPU 0
-msr_write(dev, 0x1A2, 0x3640000, 0);
+msr_write(dev, 0, 0x1A2, 0x3640000);
 
 msr_close(dev);
 ```

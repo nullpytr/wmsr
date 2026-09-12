@@ -78,7 +78,7 @@ MSR_INLINE BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUEST 
     );
 }
 
-MSR_INLINE BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value) {
+MSR_INLINE BOOL msr_read(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_QUAD *value) {
     MSR_REQUEST request = {
         .msr_no = reg,
         .cpu = cpu
@@ -88,7 +88,7 @@ MSR_INLINE BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value
     return result;
 }
 
-MSR_INLINE BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu) {
+MSR_INLINE BOOL msr_write(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_QUAD value) {
     MSR_REQUEST request = { 
         .msr_no = reg,
         .cpu = cpu,
@@ -137,16 +137,16 @@ public:
         return *this;
     }
 
-    u64 read(u32 const reg, u32 const cpu) const {
+    u64 read(u32 const cpu, u32 const reg) const {
         u64 value;
-        if (!detail::msr_read(m_handle, reg, cpu, &value))
+        if (!detail::msr_read(m_handle, cpu, reg, &value))
             error("IOCTL_READ_MSR failed");
 
         return value;
     }
 
-    void write(u32 const reg, u64 const value, u32 const cpu) const {
-        if (!detail::msr_write(m_handle, reg, value, cpu))
+    void write(u32 const cpu, u32 const reg, u64 const value) const {
+        if (!detail::msr_write(m_handle, cpu, reg, value))
             error("IOCTL_WRITE_MSR failed");
     }
 
